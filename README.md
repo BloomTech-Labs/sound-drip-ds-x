@@ -59,12 +59,11 @@ pip3 install -r requirements.txt
 https://s3.console.aws.amazon.com/s3/buckets/sound-drip/Flask-Prod-Files/?region=us-east-1&tab=overview
 
 7. Copy following files to `./models`: 
-    - `genres_array_2.pkl`
     - `model5.joblib`
     - `scalar3.joblib`
     - `slider_model6.joblib`
 
-8. Place `song_id_array3.pkl` in a new `data` folder after creating it under the `SOUNDDRIP` directory
+8. Place `song_id_array3.pkl` and `genres_array_2.pkl` in a new `data` folder after creating it under the `SOUNDDRIP` directory
 
 9. Create `env_vars.py` with the necessary database credentials under `./misc/` 
 
@@ -82,9 +81,4 @@ python3 application.py
 ```
 pip install [package name] --target [target directory]
 ```
-
-
-
-
-
 
