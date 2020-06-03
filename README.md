@@ -39,12 +39,12 @@ python3 -m pip install --user virtualenv
 3. Create environment, replacing `env` with your preferred environment name 
 
 ```
-python3 -m venv env
+python3 -m venv [environment name]
 ```
 4. Activate environment
 
 ```
-source env/bin/activate
+source [environment name]/bin/activate
 ```
 
 5. Install all dependencies from the `requirements.txt` file located in the current directory 
