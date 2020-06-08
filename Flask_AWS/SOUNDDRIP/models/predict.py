@@ -316,11 +316,15 @@ class Sound_Drip:
         '''
         Loops through song_id_predictions, inserting song_id, user information and song_index into db
         '''
+        if FLASK_ENV is 'production':
+            db_table = 'recommendations'
+        elif FLASK_ENV is 'development':
+            db_table = 'recommendations_dev'
         try:
             conn, cur = self.db_connect()
             for song_id, song_index in self.song_id_predictions[1].items():
                 cur.execute(
-                    'INSERT INTO recommendations'
+                    f'INSERT INTO {db_table}'
                     '(userid,songid,songlistindex,seedsongid,recdate)'
                     f' VALUES (\'{self.user_id}\',\'{song_id}\',\'{song_index}\',\'{self.song_id}\',current_timestamp);')
             conn.commit()
