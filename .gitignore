@@ -230,3 +230,4 @@ model_notebooks/data/knn_model7.joblib
 model_notebooks/data/model2.joblib
 model_notebooks/data/song_list_v6.pkl
 model_notebooks/data/song_list_v6_genre_embeds.pkl
+Flask_AWS/SOUNDDRIP/misc/env_vars.py
