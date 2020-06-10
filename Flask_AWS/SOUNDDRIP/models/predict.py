@@ -12,6 +12,12 @@ import sys
 from more_itertools import unique_everseen
 
 
+if FLASK_ENV == 'production':
+    db_table = 'recommendations'
+elif FLASK_ENV == 'development':
+    db_table = 'recommendations_dev'
+
+
 class Sound_Drip:
     '''
     The Sound_Drip object contains all of the code necessary to output automated results via
@@ -316,10 +322,6 @@ class Sound_Drip:
         '''
         Loops through song_id_predictions, inserting song_id, user information and song_index into db
         '''
-        if FLASK_ENV is 'production':
-            db_table = 'recommendations'
-        elif FLASK_ENV is 'development':
-            db_table = 'recommendations_dev'
         try:
             conn, cur = self.db_connect()
             for song_id, song_index in self.song_id_predictions[1].items():
