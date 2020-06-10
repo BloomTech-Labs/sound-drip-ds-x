@@ -349,7 +349,7 @@ class Sound_Drip:
         '''
         try:
             conn, cur = self.db_connect()
-            query = f'SELECT DISTINCT (songlistindex) FROM recommendations WHERE userid = \'{self.user_id}\';'
+            query = f'SELECT DISTINCT (songlistindex) FROM {db_table} WHERE userid = \'{self.user_id}\';'
             cur.execute(query)
             query_results = cur.fetchall()
             stale_results_list = [index[0] for index in query_results]
@@ -364,7 +364,7 @@ class Sound_Drip:
     def get_stale_seed(self):
         try:
             conn,cur = self.db_connect()
-            query = f'SELECT DISTINCT (seedsongid) FROM recommendations WHERE userid = \'{self.user_id}\' AND seedsongid is not null;'
+            query = f'SELECT DISTINCT (seedsongid) FROM {db_table} WHERE userid = \'{self.user_id}\' AND seedsongid is not null;'
             cur.execute(query)
             query_results = cur.fetchall()
             stale_results_list = [index[0] for index in query_results]
