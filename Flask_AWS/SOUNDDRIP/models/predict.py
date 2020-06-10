@@ -12,6 +12,10 @@ import sys
 from more_itertools import unique_everseen
 
 
+#importing global environment variables from Elastic Beanstalk
+os.environ.get('FLASK_ENV')
+
+#setting appropriate database table
 if FLASK_ENV == 'production':
     db_table = 'recommendations'
 elif FLASK_ENV == 'development':
@@ -326,7 +330,7 @@ class Sound_Drip:
             conn, cur = self.db_connect()
             for song_id, song_index in self.song_id_predictions[1].items():
                 cur.execute(
-                    'INSERT INTO recommendations'
+                    'INSERT INTO {db_table}'
                     '(userid,songid,songlistindex,seedsongid,recdate)'
                     f' VALUES (\'{self.user_id}\',\'{song_id}\',\'{song_index}\',\'{self.song_id}\',current_timestamp);')
             conn.commit()
@@ -344,7 +348,7 @@ class Sound_Drip:
         '''
         try:
             conn, cur = self.db_connect()
-            query = f'SELECT DISTINCT (songlistindex) FROM recommendations WHERE userid = \'{self.user_id}\';'
+            query = f'SELECT DISTINCT (songlistindex) FROM {db_table} WHERE userid = \'{self.user_id}\';'
             cur.execute(query)
             query_results = cur.fetchall()
             stale_results_list = [index[0] for index in query_results]
@@ -359,7 +363,7 @@ class Sound_Drip:
     def get_stale_seed(self):
         try:
             conn,cur = self.db_connect()
-            query = f'SELECT DISTINCT (seedsongid) FROM recommendations WHERE userid = \'{self.user_id}\' AND seedsongid is not null;'
+            query = f'SELECT DISTINCT (seedsongid) FROM {db_table} WHERE userid = \'{self.user_id}\' AND seedsongid is not null;'
             cur.execute(query)
             query_results = cur.fetchall()
             stale_results_list = [index[0] for index in query_results]
