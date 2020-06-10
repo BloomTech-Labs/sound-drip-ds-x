@@ -10,8 +10,13 @@ import psycopg2 as ps
 from misc.env_vars import *
 import sys
 from more_itertools import unique_everseen
+import os 
 
 
+#importing global environment variables from Elastic Beanstalk
+os.environ.get('FLASK_ENV')
+
+#setting appropriate database table
 if FLASK_ENV == 'production':
     db_table = 'recommendations'
 elif FLASK_ENV == 'development':
