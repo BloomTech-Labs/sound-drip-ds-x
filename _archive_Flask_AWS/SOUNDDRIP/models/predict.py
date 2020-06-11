@@ -14,7 +14,7 @@ import os
 
 
 #importing global environment variables from Elastic Beanstalk
-FLASK_ENV = os.environ.get('FLASK_ENV')
+os.environ.get('FLASK_ENV')
 
 #setting appropriate database table
 if FLASK_ENV == 'production':
