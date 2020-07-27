@@ -56,7 +56,7 @@ pip3 install -r requirements.txt
 
 6. Download all compressed file object dependencies from `S3` in this directory
 
-https://s3.console.aws.amazon.com/s3/buckets/sound-drip/Flask-Prod-Files/?region=us-east-1&tab=overview
+https://s3.console.aws.amazon.com/s3/buckets/sound-drip-copy/Flask-Prod-Files/?region=us-east-1&tab=overview
 
 7. Copy following files to `./models`: 
     - `model5.joblib`

@@ -3,8 +3,8 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import MinMaxScaler, Normalizer
 import pandas as pd
 from pandas.io.json import json_normalize
-from joblib import load, dump
-import pickle
+#from joblib import load, dump
+#import pickle
 import numpy as np
 import psycopg2 as ps
 from misc.env_vars import *
@@ -14,7 +14,7 @@ import os
 
 
 #importing global environment variables from Elastic Beanstalk
-FLASK_ENV = os.environ.get('FLASK_ENV')
+FLASK_ENV = 'development'
 
 #setting appropriate database table
 if FLASK_ENV == 'production':
@@ -68,10 +68,15 @@ class Sound_Drip:
         see class method definition for details
     '''
 
-    def __init__(self, token):
+    def __init__(self, token, genre_array, song_id_array, scaler, model):
+        self.genre_array = genre_array
+        self.song_id_array = song_id_array
+        self.scaler = scaler
+        self.model = model
         self.token = token
         self.sp = spotipy.Spotify(auth=self.token)
         self.user_id, self.display_name = self.get_user_ids()
+        self.db_conn, self.db_cur = self.db_connect()
         self.stale_seed_list = self.get_stale_seed()
         self.stale_results_list = self.get_stale_results()
         self.song_id, self.source_genre = self.get_user_song_id_source_genre()
@@ -84,6 +89,7 @@ class Sound_Drip:
         self.song_id_predictions = self.song_id_prediction_output(
             self.filtered_list)
         self.insert_user_predictions(), print("predicts inserted into db")
+        self.close_db_con = self.db_close
 
     def get_user_ids(self):
         '''
@@ -201,14 +207,14 @@ class Sound_Drip:
         5) Predictions are made on the normalized array from the song features
         6) Returns results object (5000 nearest neighbors from KNN model are returned)
         '''
-        scaler = load("./models/scalar3.joblib")
+        #scaler = load("./models/scalar3.joblib")
         print('Scaling data...')
-        data_scaled = scaler.transform(song_features_df)
+        data_scaled = self.scaler.transform(song_features_df)
         normalizer = Normalizer()
         data_normalized = normalizer.fit_transform(data_scaled)
         print('Loading pickled model...')
-        model = load('./models/model5.joblib')
-        results = model.kneighbors([data_normalized][0])[1:]
+        #model = load('./models/model5.joblib')
+        results = self.model.kneighbors([data_normalized][0])[1:]
         print('results returned')
         return results[0]
 
@@ -239,25 +245,25 @@ class Sound_Drip:
         # loop takes KNN results and filters by source track genres
         print(source_genre_list)
         print("filter for genres initiated")
-        genre_array = pickle.load(open("./data/genres_array_2.pkl", "rb"))
+        #genre_array = pickle.load(open("./data/genres_array_2.pkl", "rb"))
         filtered_list = []
         song_list_length = 20
         stale_results = self.stale_results_list
         model_results_before = len(model_results[0][1:])
-        model_results = [index for index in model_results[0]
-                         [1:] if index not in stale_results]
+        stl_res = set.intersection(set(self.results[0][1:]), set(stale_results))
+        model_results = [index for index in self.results[0][1:] if index not in stl_res]
         model_results_final = model_results_before - len(model_results)
         print(f'{model_results_final} stale tracks were removed for the user')
+        source_genre = set(["'" + genre + "'" for genre in source_genre_list])
         for output_song_index in model_results:
-            output_genre_list = genre_array[output_song_index]
-            for output_genre in output_genre_list:
-                output_genre = output_genre.strip(" ")
-                for source_genre in source_genre_list:
-                    source_genre = "'" + source_genre + "'"
-                    if source_genre == output_genre:
-                        filtered_list.append(output_song_index)
-                    else:
-                        continue
+            output_genre = set(self.genre_array[output_song_index])
+            output_genre = [elem.strip(" ") for elem in output_genre]
+                
+            common_ele = set.intersection(source_genre, output_genre)
+            
+            if len(common_ele) > 0:
+                filtered_list.append(output_song_index)
+            
         filtered_list = list(unique_everseen(filtered_list))
         if len(filtered_list) >= song_list_length:
             print("filter found at least 20 genre matches")
@@ -285,10 +291,10 @@ class Sound_Drip:
         similar_songs = []
         song_id_list = []
         print('song_id_list loading...')
-        song_id_array = pickle.load(open('./data/song_id_array3.pkl', 'rb'))
+        #song_id_array = pickle.load(open('./data/song_id_array3.pkl', 'rb'))
         print('song_id_list loaded')
         for song_row in filtered_list:
-            song_id = song_id_array[song_row]
+            song_id = self.song_id_array[song_row]
             similar_songs.append({'similarity': [.99], 'values': song_id})
             song_id_list.append(song_id)
         song_result_output_dict = {"songs": similar_songs}
@@ -312,6 +318,8 @@ class Sound_Drip:
         cur = conn.cursor()
         return conn, cur
 
+    def db_close(self):
+        self.db_conn.close()
     # def get_user_ids(self):
     #     '''
     #     Retrieves user id from Spotfiy API
@@ -327,13 +335,14 @@ class Sound_Drip:
         '''
         Loops through song_id_predictions, inserting song_id, user information and song_index into db
         '''
+        insert_bulk = f'INSERT INTO {db_table} (userid,songid,songlistindex,seedsongid,recdate) VALUES '
         try:
             conn, cur = self.db_connect()
             for song_id, song_index in self.song_id_predictions[1].items():
-                cur.execute(
-                    f'INSERT INTO {db_table}'
-                    '(userid,songid,songlistindex,seedsongid,recdate)'
-                    f' VALUES (\'{self.user_id}\',\'{song_id}\',\'{song_index}\',\'{self.song_id}\',current_timestamp);')
+                values_segment = f'(\'{self.user_id}\',\'{song_id}\',\'{song_index}\',\'{self.song_id}\',current_timestamp)'
+                insert_bulk = insert_bulk  + values_segment +','
+            insert_bulk = insert_bulk[:-1] + ';'
+            cur.execute(insert_bulk)
             conn.commit()
             conn.close()
         except ps.DatabaseError as e:
@@ -396,8 +405,11 @@ class Slider(Sound_Drip):
     ----------
     '''
 
-    def __init__(self, slider_features):
+    def __init__(self, slider_features, scaler, slider_model, song_id_array):
+        self.scaler = scaler
+        self.slider_model = slider_model
         self.slider_features = slider_features
+        self.song_id_array = song_id_array
         self.slider_features_df = self.create_slider_feature_df(
             slider_features)
         self.slider_results_list = self.get_slider_results(
@@ -414,13 +426,13 @@ class Slider(Sound_Drip):
         return df
 
     def get_slider_results(self, song_features_df):
-        scaler = load("./models/scalar3.joblib")
+        scaler = self.scaler #load("./models/scalar3.joblib")
         print('Scaling data...')
         data_scaled = scaler.transform(song_features_df)
         normalizer = Normalizer()
         data_normalized = normalizer.fit_transform(data_scaled)
         print('Loading pickled model...')
-        model = load('./models/slider_model6.joblib')
+        model = self.slider_model #load('./models/slider_model6.joblib')
         results = model.kneighbors([data_normalized][0])[1:]
         print('results returned')
         return results[0]
