@@ -35,7 +35,7 @@ for event, ele in context:
     # indicates end of album info
     if event == 'end' and ele.tag == 'master':
         
-        if iters > check_points[check]:
+        if iters > check_points[check]: #print checkpoint of iterations and current objet size
             print(check_points[check])
             cur_size = sys.getsizeof(str(albtrck))
             check += 1
@@ -45,7 +45,7 @@ for event, ele in context:
         iters += 1
         
         try:
-                
+            # Make new file when over .24 GBs
             if cur_size > 240000000:
                 print('S P L I T')
                 fname = path.splitext(path.basename(path.normpath(file_path)))[0] + f'_{file_number}.json'
@@ -66,7 +66,7 @@ for event, ele in context:
             continue
 
         finally:
-            ele.clear()
+            ele.clear() # reduce memory usage by clearing extracted elements
     
     #indicates begining of album info 
     elif event == 'start' and ele.tag == 'master':
@@ -96,7 +96,8 @@ for event, ele in context:
 
 
 fname = path.splitext(path.basename(path.normpath(file_path)))[0] + f'_{file_number}.json'
-            
+
+# create final file from remaining data
 with open(fname, 'w') as outfile:
     print(f'CREATING FILE: {fname}')
     json.dump(albtrck, outfile)
