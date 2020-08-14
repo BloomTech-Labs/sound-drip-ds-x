@@ -6,7 +6,7 @@ from datetime import datetime
 def lambda_handler(event, context):
     """
     Scheduled task to retrieve new "masters" uploads from discogs s3 bucket
-    and download them to a new s3 bucket
+    and download them to account s3 bucket
 
         Parameters:
             event (json) : unused
@@ -34,7 +34,7 @@ def lambda_handler(event, context):
     from_bucket = s3.Bucket(from_bucket_name)
     to_bucket = s3.Bucket(to_bucket_name)
     
-    #Download index file, this documentss old/unwanted/already-processed files 
+    #Download index file, this documents old/unwanted/already-processed files 
     to_bucket.download_file(from_index_file, to_index_file)
     
     try:
@@ -82,7 +82,7 @@ def lambda_handler(event, context):
                 new_obj = to_bucket.Object(new_key)    #Create new object in target bucket
                 new_obj.copy(from_source)    #Copy object from source bucket
                     
-    #Upload update index file
+    #Upload updated index file
     s3_client = boto3.client('s3')
     s3_client.upload_file(to_index_file, to_bucket_name, from_index_file)            
     
