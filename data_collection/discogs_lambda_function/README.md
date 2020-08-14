@@ -8,7 +8,7 @@
     - runtime: python 3.8
     - handler : lambda_handler
     - memory : 128 MB
-    - libraries : [json, boto3]
+    - libraries : [json, boto3, datetime]
     
 
 ### Scheduled event trigger
