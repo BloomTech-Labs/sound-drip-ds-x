@@ -1,7 +1,7 @@
 # Discogs Lambda Function
 > AWS Lambda Function to copy new files from discogs s3 to account s3
 
-![](https://github.com/Lambda-School-Labs/sound-drip-ds-x/blob/master/data_collection/discogs_lambda_function/dscg-func.jpg)
+![](https://github.com/Lambda-School-Labs/sound-drip-ds-x/blob/master/data_collection/discogs_lambda_function/function_process.jpg)
 
 ### Function Details
     - name: dscg-func
