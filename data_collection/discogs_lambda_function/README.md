@@ -1,5 +1,5 @@
 # Discogs Lambda Function
-> AWS Lambda Function to copy new files from discogs s3 to account s3
+> AWS Lambda Function to parse new \*masters.gz files from discogs s3 and upload parsed to account s3
 
 ![](https://github.com/Lambda-School-Labs/sound-drip-ds-x/blob/master/data_collection/discogs_lambda_function/function_process.jpg)
 
@@ -7,8 +7,8 @@
     - name: dscg-func
     - runtime: python 3.8
     - handler : lambda_handler
-    - memory : 128 MB
-    - libraries : [json, boto3, datetime]
+    - memory : 2048 MB
+    - libraries : [boto3, datetime, gzip, json, os, xml.sax]
     
 
 ### Scheduled event trigger
